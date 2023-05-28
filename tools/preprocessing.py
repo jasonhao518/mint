@@ -14,19 +14,19 @@ import tensorflow as tf
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string(
-    'anno_dir', '/mnt/data/aist_plusplus_final/', 
+    'anno_dir', '/mnt/data/aist_plusplus_final/',
     'Path to the AIST++ annotation files.')
 flags.DEFINE_string(
-    'audio_dir', '/mnt/data/AIST/music/', 
+    'audio_dir', '/mnt/data/AIST/music/',
     'Path to the AIST wav files.')
 flags.DEFINE_string(
-    'audio_cache_dir', './data/aist_audio_feats/', 
+    'audio_cache_dir', './data/aist_audio_feats/',
     'Path to cache dictionary for audio features.')
 flags.DEFINE_enum(
     'split', 'train', ['train', 'testval'],
     'Whether do training set or testval set.')
 flags.DEFINE_string(
-    'tfrecord_path', './data/aist_tfrecord', 
+    'tfrecord_path', './data/aist_tfrecord',
     'Output path for the tfrecord files.')
 
 RNG = np.random.RandomState(42)
@@ -96,10 +96,10 @@ def cache_audio_features(seq_names):
         if os.path.exists(save_path):
             continue
         data, _ = librosa.load(os.path.join(FLAGS.audio_dir, f"{audio_name}.wav"), sr=SR)
-        envelope = librosa.onset.onset_strength(data, sr=SR)  # (seq_len,)
-        mfcc = librosa.feature.mfcc(data, sr=SR, n_mfcc=20).T  # (seq_len, 20)
+        envelope = librosa.onset.onset_strength(y=data, sr=SR)  # (seq_len,)
+        mfcc = librosa.feature.mfcc(y=data, sr=SR, n_mfcc=20).T  # (seq_len, 20)
         chroma = librosa.feature.chroma_cens(
-            data, sr=SR, hop_length=HOP_LENGTH, n_chroma=12).T  # (seq_len, 12)
+            y=data, sr=SR, hop_length=HOP_LENGTH, n_chroma=12).T  # (seq_len, 12)
 
         peak_idxs = librosa.onset.onset_detect(
             onset_envelope=envelope.flatten(), sr=SR, hop_length=HOP_LENGTH)
@@ -146,7 +146,7 @@ def main(_):
     print ("Pre-compute audio features ...")
     os.makedirs(FLAGS.audio_cache_dir, exist_ok=True)
     cache_audio_features(seq_names)
-    
+
     # load data
     dataset = AISTDataset(FLAGS.anno_dir)
     n_samples = len(seq_names)
@@ -180,7 +180,7 @@ def main(_):
 
             tfexample = to_tfexample(smpl_motion, audio, seq_name, audio_name)
             write_tfexample(tfrecord_writers, tfexample)
-    
+
     close_tfrecord_writers(tfrecord_writers)
 
 if __name__ == '__main__':

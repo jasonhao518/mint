@@ -63,7 +63,7 @@ def _create_learning_rate(learning_rate_config):
 
   if learning_rate_type == 'exponential_decay_learning_rate':
     config = learning_rate_config.exponential_decay_learning_rate
-    lr_schedule = tf.keras.optimizers.schedules.PolynomialDecay(
+    lr_schedule = tf.keras.optimizers.legacy.schedules.PolynomialDecay(
         FLAGS.initial_learning_rate,
         decay_steps=config.decay_steps,
         end_learning_rate=config.min_learning_rate,
@@ -147,7 +147,7 @@ def train():
   with strategy.scope():
     model_ = model_builder.build(model_config, True)
     lr_schedule = _create_learning_rate(train_config.learning_rate)
-    optimizer = tf.keras.optimizers.Adam(lr_schedule)
+    optimizer = tf.keras.optimizers.legacy.Adam(lr_schedule)
     model_.global_step = optimizer.iterations
     summaryfn = None
     if FLAGS.train_strategy == TRAIN_STRATEGY[1]:

@@ -35,6 +35,7 @@ def get_closest_rotmat(rotmats):
     iden = eye(3, det.shape)
     iden[..., 2, 2] = np.sign(det)
     r_closest = np.matmul(np.matmul(u, iden), vh)
+    print(r_closest)
     return r_closest
 
 
@@ -73,8 +74,8 @@ def visualize(motion, smpl_model):
     vedo.show(world, axes=True, viewup="y", interactive=0)
     for kpts in keypoints3d:
         pts = vedo.Points(kpts).c("red")
-        plotter = vedo.show(world, pts)
-        if plotter.escaped: break  # if ESC
+        plotter = vedo.show(world, pts,interactive=0)
+        #if plotter.escaped: break  # if ESC
         time.sleep(0.01)
     vedo.interactive().close()
 
@@ -201,24 +202,24 @@ if __name__ == "__main__":
     }
 
     # set smpl
-    smpl = SMPL(model_path="/mnt/data/smpl/", gender='MALE', batch_size=1)
+    smpl = SMPL(model_path="./data/smpl/", gender='MALE', batch_size=1)
 
     # get motion features for the results
     result_features = {"kinetic": [], "manual": []}
     result_files = glob.glob("outputs/*.npy")
     for result_file in tqdm.tqdm(result_files):
         result_motion = np.load(result_file)[None, ...]  # [1, 120 + 1200, 225]
-        # visualize(result_motion, smpl)
-        result_features["kinetic"].append(
-            extract_feature(result_motion[:, 120:], smpl, "kinetic"))
-        result_features["manual"].append(
-            extract_feature(result_motion[:, 120:], smpl, "manual"))
+        visualize(result_motion, smpl)
+    #    result_features["kinetic"].append(
+    #        extract_feature(result_motion[:, 120:], smpl, "kinetic"))
+    #    result_features["manual"].append(
+    #        extract_feature(result_motion[:, 120:], smpl, "manual"))
 
     # FID metrics
-    FID_k = calculate_frechet_feature_distance(
-        real_features["kinetic"], result_features["kinetic"])
-    FID_g = calculate_frechet_feature_distance(
-        real_features["manual"], result_features["manual"])
+    #FID_k = calculate_frechet_feature_distance(
+    #    real_features["kinetic"], result_features["kinetic"])
+    #FID_g = calculate_frechet_feature_distance(
+    #    real_features["manual"], result_features["manual"])
 
     # Evaluation: FID_k: ~38, FID_g: ~27
     # The AIChoreo paper used a bugged version of manual feature extractor from
@@ -226,4 +227,4 @@ if __name__ == "__main__":
     # So the FID_g here does not match with the paper. But this value should be correct.
     # In this aistplusplus_api repo the feature extractor bug has been fixed.
     # (see here: https://github.com/google/aistplusplus_api/blob/main/aist_plusplus/features/manual.py#L50)
-    print('\nEvaluation: FID_k: {:.4f}, FID_g: {:.4f}\n'.format(FID_k, FID_g))
+    #print('\nEvaluation: FID_k: {:.4f}, FID_g: {:.4f}\n'.format(FID_k, FID_g))
